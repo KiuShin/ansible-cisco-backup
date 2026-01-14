@@ -10,6 +10,11 @@ __pycache__/
 .vscode/
 .DS_Store
 
+#files containing sensitive information
+secrets.yml
+api_token.txt
+tokens.txt
+
 # Temporary files
 *.tmp
 
