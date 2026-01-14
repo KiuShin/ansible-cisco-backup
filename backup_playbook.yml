@@ -1,0 +1,47 @@
+
+---
+- name: Backup Cisco device configs
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Create configs directory if not exists
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - ./configs
+        - ./logs
+
+    - name: Backup block per device
+      block:
+      
+      - name: Pull running config
+        cisco.ios.ios_config:
+          backup: yes
+        register: backup_result
+
+      - name: Save backup to file
+        copy:
+          content: "{{ backup_result.backup_config }}"
+          dest: "./configs/{{ inventory_hostname }}_running_config_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.cfg"
+
+      - name: Log backup status
+        lineinfile:
+          path: "./logs/backup_log.txt"
+          line: "{{ ansible_date_time.date }} {{ ansible_date_time.time }} - {{ inventory_hostname }} - Backup successful"
+          create: yes
+
+      rescue:
+
+        - name: Log backup failure
+          lineinfile:
+            path: "./logs/backup_log.txt"
+            line: "{{ inventory_hostname }} backup failed at {{ lookup('pipe', 'date +%Y-%m-%d %H:%M:%S') }}"
+            create: yes
+
+      always:
+        - name: Always show results
+          debug:
+            msg: "Backup attempt for {{ inventory_hostname }} completed."

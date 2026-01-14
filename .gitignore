@@ -1,0 +1,15 @@
+# Ansible artifacts
+configs/*.cfg
+logs/*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / Editor
+.vscode/
+.DS_Store
+
+# Temporary files
+*.tmp
+

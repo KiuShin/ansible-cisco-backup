@@ -1,0 +1,32 @@
+---
+- name: Test backup logic (offline)
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    backup_result:
+      backup: |
+        version 15.2
+        hostname TEST_ROUTER
+        interface GigabitEthernet0/0
+          ip address 192.168.1.1 255.255.255.0
+
+  tasks:
+    - name: Ensure directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - ./configs
+        - ./logs
+
+    - name: Save backup to file
+      copy:
+        content: "{{ backup_result.backup }}"
+        dest: "./configs/test_router_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.cfg"
+
+    - name: Log backup status
+      lineinfile:
+        path: "./logs/backup.log"
+        line: "test_router backup succeeded"
+        create: yes
