@@ -1,159 +1,118 @@
-# Ansible Cisco Device Backup Automation
+Ansible Cisco Configuration Backup – Test-Driven Automation
+Overview
 
-## Overview
+This project implements a test-driven workflow for validating and automating Cisco device configuration backups using Ansible and Python.
 
-This project automates the backup of Cisco network device configurations using Ansible. The goal is to create a reliable, repeatable, and testable backup workflow that can be validated even when network devices are offline.
+The focus of this repository is not monitoring or alerting, but verifying backup logic correctness before wiring it into automated workflows. The test suite validates syntax, inventory parsing, backup file creation, naming conventions, and inventory-to-backup correlation.
 
-Backups are saved as timestamped `.cfg` files to support versioning, auditability, and easy restoration.
+This project is designed to be run offline or without live devices, making it suitable for development, CI pipelines, and learning environments.
 
-This project is designed as a **portfolio-quality infrastructure automation project**, following best practices for documentation, testing, and incremental development.
+Project Goals
 
----
+Validate Ansible backup logic before production use
 
-## Key Objectives
+Ensure backups are created with correct naming conventions
 
-* Automate the collection of Cisco device running configurations
-* Store backups as timestamped configuration files
-* Support offline development and validation
-* Separate logic validation from artifact validation
-* Use Ansible + Python together in a practical workflow
+Correlate inventory hosts to generate backup files
 
----
+Detect missing or orphaned backups
 
-## Technologies Used
+Practice modular, test-driven infrastructure automation
 
-* **Ansible** (network automation)
-* **Cisco IOS Ansible Collection** (`cisco.ios`)
-* **Python 3** (test runner and validation)
-* **WSL (Windows Subsystem for Linux)**
-* **Visual Studio Code**
-* **Git / GitHub**
+Project Structure
+ansible-cisco-backup/
+├── backup_playbook.yml          # Main backup playbook
+├── test_backup_logic.yml        # Offline logic validation playbook
+├── inventory.yml                # Ansible inventory
+├── test_backup_playbook.py      # Python test harness
+├── configs/                     # Generated .cfg backups
+├── logs/                        # Backup logs (if enabled)
+├── .gitignore                   # Ignores tokens, secrets, artifacts
+└── README.md
 
----
+Requirements
 
-## Project Structure
+Python 3.9+
 
-```
-ansible_cisco_backup/
-├── README.md              # Project documentation
-├── backup_playbook.yml    # Ansible playbook for device backups
-├── inventory.yml          # Ansible inventory
-├── configs/               # Generated .cfg backup files
-├── logs/                  # Backup execution logs
-├── tests/                 # Python-based test scripts
-│   └── run_tests.py
-├── .gitignore             # Ignored files
-└── tokens.yml             # **Ignored by Git** - stores secrets or tokens locally
-```
+Ansible
 
----
+PyYAML
 
-## Recommended .gitignore
+Linux / WSL recommended (tested in WSL)
 
-```
-# Ansible artifacts
-configs/*.cfg
-logs/*.log
+Install dependencies:
 
-# Python
-__pycache__/
-*.pyc
+pip install pyyaml
 
-# OS / Editor
-.vscode/
-.DS_Store
+Test Suite Overview
 
-# Temporary files
-*.tmp
+The test harness is implemented in test_backup_playbook.py and executed as a single script.
 
-# Secret token files
-tokens.yml
-```
+Test Coverage
+Test	Description
+Test 1	Ansible playbook syntax validation
+Test 2	Inventory parsing and host iteration
+Test 3	Connectivity test (ping)
+Test 4	Offline backup logic execution
+Test 5	Backup file existence check
+Test 6	Backup file validation (naming, empty files)
+Test 7	Inventory ↔ backup correlation (missing/orphan backups)
 
----
+⚠️ Connectivity failures are treated as warnings, not failures, to support offline testing.
 
-## How the Backup Works
+Running the Tests
 
-1. Ansible connects to Cisco devices using SSH
-2. The running configuration is retrieved using Cisco IOS modules
-3. Output is registered to a variable
-4. Configuration is written to a timestamped `.cfg` file
-5. Backup success or failure is logged
+From the project root:
 
-Each backup file is uniquely named using:
+python3 test_backup_playbook.py
 
-```
-<hostname>_<YYYYMMDD>_<HHMMSS>.cfg
-```
 
----
+Expected output includes clear [PASS], [FAIL], and [WARN] markers for each test stage.
 
-## Testing Strategy
+Backup File Naming Convention
 
-This project uses **incremental tests**, each with a single responsibility.
+Backups are expected to follow this format:
 
-### Test Breakdown
+<hostname>_YYYYMMDD_HHMMSS.cfg
 
-**Test 1 – Playbook Syntax Validation**
-Validates YAML and Ansible syntax.
 
-**Test 2 – Inventory Parsing**
-Ensures Ansible can read the inventory and resolve hosts.
+Example:
 
-**Test 3 – Connectivity Attempt**
-Confirms Ansible attempts SSH connections (expected to fail if devices are offline).
+router1_20240110_153045.cfg
 
-**Test 4 – Backup Logic Validation**
-Validates backup task logic, variable registration, and task execution order.
 
-**Test 5 – Backup Artifact Validation**
-Confirms `.cfg` files are created in the expected directory.
+This ensures uniqueness and traceability.
 
-Tests are implemented in Python to allow flexible validation outside of Ansible execution.
+Design Philosophy
 
----
+Test logic, not state
+This project validates backup correctness, not backup health monitoring.
 
-## Running the Tests
+Offline-first
+Tests can be run without powered-on devices.
 
-From the project root (inside WSL):
+Incremental automation
+Backup automation is validated before scheduling or CI integration.
 
-```bash
-python3 tests/run_tests.py
-```
+Future Improvements (Optional)
 
-Test results will display pass/fail output for each validation step.
+CI integration (GitHub Actions)
 
----
+Modular test files with a main runner
 
-## Offline Development Support
+Encrypted secret handling
 
-This project is intentionally designed to support development **without requiring live network devices**.
+Device-specific platform expansion
 
-* Syntax and inventory tests run without devices
-* Connectivity failures are treated as expected behavior when offline
-* Artifact validation confirms correct filesystem behavior
+Disclaimer
 
-This allows safe iteration and testing before deployment to production environments.
+This project is for learning and validation purposes and should be adapted and secured before production use.
 
----
+Author
 
-## Future Enhancements
-
-* Validate backup file contents (non-empty and expected keywords)
-* Add checksum or hash verification
-* Support multiple device platforms
-* Encrypt backups at rest
-* Upload backups to cloud storage (S3, Azure Blob, etc.)
-* Add CI pipeline integration
-
----
-
-## Author Notes
-
-This project was built with a focus on **clarity, testability, and real-world network automation practices**. The approach prioritizes reliability over shortcuts, reflecting how production automation systems are designed and validated.
-
----
+Built as part of hands-on infrastructure automation practice using Ansible, Python, and Cisco tooling.
 
 ## Disclaimer
 
 This project is for educational and portfolio purposes. Do not store production credentials or sensitive data in this repository.
+
