@@ -23,7 +23,7 @@
     - name: Save backup to file
       copy:
         content: "{{ backup_result.backup }}"
-        dest: "./configs/test_router_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.cfg"
+        dest: "./configs/router1_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.cfg"
 
     - name: Log backup status
       lineinfile:

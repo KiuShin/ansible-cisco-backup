@@ -13,24 +13,29 @@
       loop:
         - ./configs
         - ./logs
-
+        
+    - name: Set backup
+      set_fact:
+        backup_timestamp: "{{ '%Y%m%d_%H%M%S' | strftime }}"
+        
     - name: Backup block per device
       block:
       
       - name: Pull running config
         cisco.ios.ios_config:
-          backup: yes
+          commands:
+          - show running-config
         register: backup_result
 
       - name: Save backup to file
         copy:
-          content: "{{ backup_result.backup_config }}"
-          dest: "./configs/{{ inventory_hostname }}_running_config_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.cfg"
+          content: "{{ backup_result.stdout[0] }}"
+          dest: "./configs/{{ inventory_hostname }}}_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.cfg"
 
       - name: Log backup status
         lineinfile:
           path: "./logs/backup_log.txt"
-          line: "{{ ansible_date_time.date }} {{ ansible_date_time.time }} - {{ inventory_hostname }} - Backup successful"
+          line: "{{backup_timestamp}} - {{ inventory_hostname }} - Backup successful"
           create: yes
 
       rescue:
@@ -38,7 +43,7 @@
         - name: Log backup failure
           lineinfile:
             path: "./logs/backup_log.txt"
-            line: "{{ inventory_hostname }} backup failed at {{ lookup('pipe', 'date +%Y-%m-%d %H:%M:%S') }}"
+            line: "{{ inventory_hostname }} backup failed at {{ backup_timestamp }}"
             create: yes
 
       always:
